@@ -13,3 +13,8 @@ httpx==0.28.1
 python-multipart==0.0.20
 
 orjson==3.11.2
+
+sqlalchemy
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
