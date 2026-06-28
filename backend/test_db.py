@@ -4,6 +4,8 @@ from database.models import User
 db = SessionLocal()
 
 user = User(
+    id=1,
+    name="Test User",
     email="test@gmail.com",
     password_hash="abc123"
 )

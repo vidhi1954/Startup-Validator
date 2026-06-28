@@ -1,10 +1,6 @@
 from sqlalchemy.orm import declarative_base
 
-from sqlalchemy import Column
-from sqlalchemy import Integer
-from sqlalchemy import String
-from sqlalchemy import Float
-from sqlalchemy import ForeignKey
+from sqlalchemy import Column, Integer, String, Float,ForeignKey
 
 Base = declarative_base()
 
@@ -26,6 +22,12 @@ class User(Base):
         primary_key=True,
         index=True   #index=True, Creates database index, Makes searching faster.
     )
+    
+    name = Column(
+        String,
+        nullable=False
+    )
+
 
     email = Column(
         String,
