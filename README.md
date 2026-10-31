@@ -1,7 +1,3 @@
-cd backend
-.\.myenv\Scripts\Activate.ps1
-
-
 Code Architecture:
 
 backend
@@ -175,3 +171,15 @@ flowchart TD
 ```
 
 
+## commands 
+cd backend
+.\.myenv\Scripts\Activate.ps1
+python main.py
+
+cd frontend
+npm run dev
+
+{
+  "email": "your_email@example.com",
+  "password": "your_password"
+}
