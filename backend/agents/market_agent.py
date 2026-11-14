@@ -1,14 +1,17 @@
+import logging
+
 from services.llm import llm
 
 from models.market import MarketAnalysis
+
+logger = logging.getLogger(__name__)
 
 structured_llm = llm.with_structured_output(
     MarketAnalysis
 )
 
 def market_agent(state):
-
-    print("\n=== MARKET AGENT START ===")
+    logger.info("Starting market agent analysis")
 
     prompt = f"""
     You are a startup market analyst.
@@ -24,8 +27,8 @@ def market_agent(state):
     """
 
     result = structured_llm.invoke(prompt)
-    
-    print("\n=== MARKET AGENT END ===") 
+
+    logger.info("Completed market agent analysis")
     return {
         "market_analysis": result.model_dump()
     }

@@ -1,21 +1,20 @@
 fastapi==0.116.1
 uvicorn[standard]==0.35.0
 
+python-dotenv==1.1.1
+pydantic==2.11.7
+python-multipart==0.0.20
+httpx==0.28.1
+orjson==3.11.2
+
 langchain==0.3.27
 langgraph==0.6.6
 langchain-ollama==0.3.7
 
-pydantic==2.11.7
-python-dotenv==1.1.1
+sqlalchemy==2.0.41
+psycopg2-binary==2.9.10
+alembic==1.16.1
 
-httpx==0.28.1
-
-python-multipart==0.0.20
-
-orjson==3.11.2
-
-sqlalchemy
-psycopg2-binary
-python-jose[cryptography]
-passlib[bcrypt]
-alembic
+python-jose[cryptography]==3.4.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.3.0

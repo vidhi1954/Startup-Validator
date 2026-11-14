@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import os 
 
-DATABASE_URL = "postgresql://postgres:password@localhost:5432/Startup_Validator"
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/Startup_Validator")
 
 engine = create_engine(DATABASE_URL)
 

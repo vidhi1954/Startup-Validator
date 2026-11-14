@@ -1,13 +1,17 @@
+import logging
+
 from services.llm import llm
 
 from models.revenue import RevenueAnalysis
+
+logger = logging.getLogger(__name__)
 
 structured_llm = llm.with_structured_output(
     RevenueAnalysis
 )
 
 def revenue_agent(state):
-    print("\n=== REVENUE AGENT START ===")
+    logger.info("Starting revenue agent analysis")
 
     prompt = f"""
     Startup Idea:
@@ -26,7 +30,7 @@ def revenue_agent(state):
 
     result = structured_llm.invoke(prompt)
 
-    print("\n=== REVENUE AGENT END ===")
+    logger.info("Completed revenue agent analysis")
     return {
         "revenue_analysis": result.model_dump()
     }

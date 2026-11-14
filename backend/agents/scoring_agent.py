@@ -1,13 +1,17 @@
+import logging
+
 from services.llm import llm
 
 from models.score import StartupScore
+
+logger = logging.getLogger(__name__)
 
 structured_llm = llm.with_structured_output(
     StartupScore
 )
 
 def scoring_agent(state):
-    print("\n=== SCORING AGENT START ===")
+    logger.info("Starting scoring agent analysis")
 
     prompt = f"""
     You are an expert startup investor.
@@ -48,7 +52,7 @@ def scoring_agent(state):
 
     result = structured_llm.invoke(prompt)
 
-    print("\n=== SCORING AGENT END ===")
+    logger.info("Completed scoring agent analysis")
     return {
         "startup_score": result.model_dump()
     }

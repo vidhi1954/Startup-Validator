@@ -1,14 +1,17 @@
+import logging
+
 from services.llm import llm
 
 from models.swot import SWOTAnalysis
+
+logger = logging.getLogger(__name__)
 
 structured_llm = llm.with_structured_output(
     SWOTAnalysis
 )
 
 def swot_agent(state):
-
-    print("\n=== SWOT AGENT START ===")
+    logger.info("Starting SWOT agent analysis")
 
     prompt = f"""
     Startup Idea:
@@ -27,8 +30,8 @@ def swot_agent(state):
     """
 
     result = structured_llm.invoke(prompt)
-    
-    print("\n=== SWOT AGENT END ===")
+
+    logger.info("Completed SWOT agent analysis")
     return {
         "swot_analysis": result.model_dump()
-    }                                           
+    }
