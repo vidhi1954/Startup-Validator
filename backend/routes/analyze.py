@@ -1,3 +1,4 @@
+import json
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -25,13 +26,13 @@ async def analyze(request: StartupRequest, current_user = Depends(get_current_us
         result=await graph.ainvoke({"idea": request.idea})
         logger.info(f"Analysis result: {result}")
 
-        #save to db
+        # save to db
         db=SessionLocal()
         try:
             analysis=Analysis(
                 user_id=current_user.id,
                 idea=request.idea,
-                result=result
+                result=json.dumps(result)
             )
             db.add(analysis)
             db.commit()

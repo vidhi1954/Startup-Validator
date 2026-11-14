@@ -48,7 +48,7 @@ def login(request: LoginRequest):
         if not user or not verify_password(request.password, user.password_hash):
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
-        token = create_access_token(user.id)
+        token = create_access_token(int(user.id))
         return {"access_token": token, "token_type": "bearer"}
     except HTTPException:
         raise

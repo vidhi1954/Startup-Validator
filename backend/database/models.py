@@ -1,6 +1,6 @@
 from sqlalchemy.orm import declarative_base
 
-from sqlalchemy import Column, Integer, String, Float,ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text
 
 Base = declarative_base()
 
@@ -59,6 +59,11 @@ class Analysis(Base):
     idea = Column(
         String,
         nullable=False
+    )
+
+    result = Column(
+        Text,
+        nullable=True
     )
 
     score = Column(
