@@ -1,13 +1,12 @@
 from database.db import SessionLocal
 from database.models import User
+from services.auth_services import hash_password, verify_password
 
 
 def create_user(name: str, email: str, password: str):
-
     db = SessionLocal()
 
     try:
-        # Check if email already exists
         existing_user = (
             db.query(User)
             .filter(User.email == email)
@@ -17,32 +16,30 @@ def create_user(name: str, email: str, password: str):
         if existing_user:
             return {
                 "success": False,
-                "message": "Email already exists"
+                "message": "Email already exists",
             }
 
-        # Create user object
         user = User(
             name=name,
             email=email,
-            password_hash=password
+            password_hash=hash_password(password),
         )
 
         db.add(user)
         db.commit()
-        db.refresh(user) # now user.id will get value from the updated DB
+        db.refresh(user)
 
         return {
             "success": True,
             "message": "User created successfully",
-            "user_id": user.id
+            "user_id": user.id,
+            "user": user,
         }
-
     finally:
         db.close()
 
 
 def login_user(email: str, password: str):
-
     db = SessionLocal()
 
     try:
@@ -55,13 +52,13 @@ def login_user(email: str, password: str):
         if user is None:
             return {
                 "success": False,
-                "message": "User not found"
+                "message": "User not found",
             }
 
-        if user.password_hash != password:
+        if not verify_password(password, user.password_hash):
             return {
                 "success": False,
-                "message": "Incorrect password"
+                "message": "Incorrect password",
             }
 
         return {
@@ -69,8 +66,7 @@ def login_user(email: str, password: str):
             "message": "Login successful",
             "user_id": user.id,
             "name": user.name,
-            "email": user.email
+            "email": user.email,
         }
-
     finally:
         db.close()

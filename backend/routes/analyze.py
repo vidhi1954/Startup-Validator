@@ -1,26 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
 import logging
-from models.request import StartupRequest
-from graph.workflow import graph
-from services.auth_services import get_current_user 
+
+from fastapi import APIRouter, Depends, HTTPException
+
 from database.db import SessionLocal
 from database.models import Analysis
+from graph.workflow import graph
+from models.request import StartupRequest
+from services.auth_services import get_current_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-bearer_scheme = HTTPBearer()
-
-def get_user_credentials(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, "your_secret_key", algorithms=["HS256"])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
 
 @router.post("/analyze")
 async def analyze(request: StartupRequest, current_user = Depends(get_current_user)):

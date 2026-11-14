@@ -1,40 +1,59 @@
+from fastapi import APIRouter, HTTPException
+
 from database.db import SessionLocal
 from database.models import User
-from fastapi import Depends, HTTPException, APIRouter
-from models.auth_req import SignupRequest, LoginRequest
-from services.auth_services import get_current_user,verify_password,create_access_token,hash_password
+from models.auth_req import LoginRequest, SignupRequest
+from services.auth_services import create_access_token, verify_password
+from services.user_verification_service import create_user
 
-router = APIRouter() # lets us group related APIs together
+router = APIRouter()
+
 
 @router.post("/signup")
 def signup(request: SignupRequest):
     db = SessionLocal()
-    existing_user = db.query(User).filter(User.email == request.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    result = create_user(
-        name=request.name,
-        email=request.email,
-        password=request.password
-    )
+    try:
+        existing_user = db.query(User).filter(User.email == request.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    db.add(result)
-    db.commit()
-    db.refresh(result)  # Refresh the user instance to get the generated ID 
-    db.close()
+        result = create_user(
+            name=request.name,
+            email=request.email,
+            password=request.password,
+        )
 
-    return result
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("message"))
+
+        return {
+            "success": True,
+            "message": result.get("message"),
+            "user_id": result.get("user_id"),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Signup failed: {str(exc)}") from exc
+    finally:
+        db.close()
+
 
 @router.post("/login")
 def login(request: LoginRequest):
     db = SessionLocal()
+    try:
+        user = db.query(User).filter(User.email == request.email).first()
+        if not user or not verify_password(request.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    user = db.query(User).filter(User.email == request.email).first()
-    db.close()
+        token = create_access_token(user.id)
+        return {"access_token": token, "token_type": "bearer"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(exc)}") from exc
+    finally:
+        db.close()
 
-    if not user or not verify_password(request.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    token = create_access_token({"user_id": user.id})
-    return {"access_token": token, "token_type": "bearer"}
-    
