@@ -11,12 +11,7 @@ router = APIRouter()
 
 @router.post("/signup")
 def signup(request: SignupRequest):
-    db = SessionLocal()
     try:
-        existing_user = db.query(User).filter(User.email == request.email).first()
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered")
-
         result = create_user(
             name=request.name,
             email=request.email,
@@ -34,10 +29,7 @@ def signup(request: SignupRequest):
     except HTTPException:
         raise
     except Exception as exc:
-        db.rollback()
         raise HTTPException(status_code=500, detail=f"Signup failed: {str(exc)}") from exc
-    finally:
-        db.close()
 
 
 @router.post("/login")
@@ -50,10 +42,6 @@ def login(request: LoginRequest):
 
         token = create_access_token(int(user.id))
         return {"access_token": token, "token_type": "bearer"}
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Login failed: {str(exc)}") from exc
     finally:
         db.close()
 
