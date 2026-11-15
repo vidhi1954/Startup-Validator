@@ -26,10 +26,14 @@ pip-wheel-metadata/
 
 # Virtual environments
 venv/
-.env
 .venv/
 ENV/
 env/
+
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # Pytest
 .pytest_cache/
@@ -50,9 +54,6 @@ env/
 
 # Visual Studio Code workspace
 .vscode/
-
-# Secrets
-.env
 
 # Node
 node_modules/
