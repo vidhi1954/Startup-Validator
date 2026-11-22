@@ -2,10 +2,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+load_dotenv()
 from routes.User_verification import router as user_verification_router
 from routes.analyze import router as analyze_router
-
-load_dotenv()
 
 app = FastAPI(
     title="Startup Validator"

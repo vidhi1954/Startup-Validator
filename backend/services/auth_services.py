@@ -2,9 +2,9 @@ import os
 from datetime import datetime, timedelta, timezone
 
 import jwt
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from passlib.context import CryptContext
 
 from database.db import SessionLocal
 from database.models import User
@@ -19,16 +19,19 @@ if not ACCESS_TOKEN_EXPIRE_MINUTES_ENV:
     raise RuntimeError("ACCESS_TOKEN_EXPIRE_MINUTES environment variable is required")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(ACCESS_TOKEN_EXPIRE_MINUTES_ENV)
 
-pwd_context = CryptContext(schemes=["bcrypt"])
 security = HTTPBearer()
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    password_bytes = password.encode("utf-8")
+    return bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        hashed_password.encode("utf-8"),
+    )
 
 
 def create_access_token(user_id: int) -> str:

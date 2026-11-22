@@ -1,4 +1,3 @@
-
 ## User Flow
 
 This is the user experience in simple business terms.
@@ -184,24 +183,76 @@ The frontend is a small React app in the `frontend` folder.
    - `loginUser()` sends a POST request to `/login`
    - `submitIdea()` sends a POST request to `/analyze`
 
-3. Auth flow
+3. `Auth flow`
    - frontend calls `/login`
    - backend verifies credentials and returns a JWT access token
    - frontend stores the token in memory or browser storage
    - later requests to `/analyze` must include the bearer token in the Authorization header
 
-4. Analysis flow
+4. `Analysis flow`
    - user enters the startup idea and optional metadata
    - `submitIdea()` sends JSON to the backend
    - backend validates the JWT, runs the LangGraph pipeline, and returns analysis data
    - frontend maps the result into display fields such as market score, revenue score, SWOT, evidence, and recommendation
 
-5. Result screen
+5. `Result screen`
    - after the analysis finishes, the app switches from the input screen to the output screen
    - scores and recommendations are rendered for the user
 
-In summary:
 
+### RAG
+1.  `chunking strategy`
+- splitting documents into pieces before embedding , too small - less context for a vector ans lacks surrounding meaning , too large embeds too much info for one vector
+- chosen 500 chars with 50 char overlap , without overlap you lose information on the edges
+
+2.  `Embedding`
+- nomic-embed-text(chosen) : works on local Ollama , good quaity and fast
+- mxbai-embed-large : works on local Ollama , better quality but is slow
+- text-embedding-3-small : runs on OpenAPI best quality , costs money and needs API key 
+
+3.  `Similarity`
+- Cosine Similarity(chosen): sees angle between vectors-direction not magnitude ,default, best for text, sees meaning and ignores length
+- Euclidean Distance : Absolute distance between vectors-better for numerical data, length of vector is atken into account
+
+4. `Chunks retrieved (k)`
+- k=3 is chosen , as it is balance between extracting the information and not flooding llm context window
+- k=10 is context rich but eats LLM context window and adds noise
+
+
+#### Database:
+1. `PostgreSQL`
+- Relational DB 
+- stores : used for user login, user info, analysis results, scores
+- used as : WHERE email='x' [exact match]
+
+2. `VectorDB`
+- stores : vectors of document chunks 
+- used as : "find me next text similar to this" [semantic search] - compares meanings not words
+
+- `ChromaDB`
+- stores embeddings in binary format on disk, easiar setup
+
+- `pgvector` [chosen]
+- It is also a good choice as we are already using postgreSQL and need to install an extension, but chromaDB works with no setup
+
+#### Vector DB Comparison
+
+| Database | Type | Best for | Pros | Cons |
+| --- | --- | --- | --- | --- |
+| `pgvector` | Open-source vector extension for PostgreSQL | Teams already using PostgreSQL | Easy to integrate with existing DB, SQL-based querying, lower operational overhead | Less specialized than purpose-built vector DBs, performance depends on setup |
+| `Pinecone` | Managed cloud vector DB | Production scale and managed infrastructure | Very fast, highly scalable, easy deployment, strong managed service | Paid service, vendor lock-in, extra cloud cost |
+| `ChromaDB` | Open-source embedding database | Local dev, prototypes, quick RAG setup | Simple API, easy local use, good for experimentation | Less mature for large multi-tenant production workloads |
+| `Qdrant` | Open-source vector database | Production-grade RAG and semantic search | Fast filtering, good search performance, strong metadata filtering | Requires deployment and tuning |
+
+#### Decision note
+- `pgvector` is a strong choice when you want everything in one PostgreSQL setup.
+- `Pinecone` is best when managed service and large-scale scaling matter more than cost.
+- `ChromaDB` is ideal for local development and fast prototyping.
+- `Qdrant` is a strong production-focused alternative for semantic search and filtering.
+
+- other vectorDB options : pinecone,pgvector
+
+#### In summary:
 Login screen -> validate credentials -> receive JWT -> submit idea -> API call to /analyze -> render score report
 
 
@@ -341,3 +392,18 @@ npm run dev
   "email": "your_email@example.com",
   "password": "your_password"
 }
+
+Database tables
+
+1) users:
+id
+name
+email
+password_hash
+
+2) analyses
+id
+user_id
+idea
+score
+result

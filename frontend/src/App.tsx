@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { submitIdea } from './api';
+import { loginUser, signupUser, submitIdea } from './api';
 import type { AnalysisResult } from './types';
 
 type Screen = 'login' | 'input' | 'output';
@@ -24,6 +24,12 @@ const defaultResult: AnalysisResult = {
 
 function App() {
   const [screen, setScreen] = useState<Screen>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
+  const [accessToken, setAccessToken] = useState('');
   const [idea, setIdea] = useState('AI tutor for competitive programming');
   const [industry, setIndustry] = useState('EdTech');
   const [targetMarket, setTargetMarket] = useState('Indian college students');
@@ -35,9 +41,26 @@ function App() {
     return idea.trim().length > 0 && industry.trim().length > 0 && targetMarket.trim().length > 0;
   }, [idea, industry, targetMarket]);
 
-  const handleLogin = (e: FormEvent) => {
+  const handleAuth = async (e: FormEvent) => {
     e.preventDefault();
-    setScreen('input');
+    setAuthMessage('');
+
+    try {
+      if (authMode === 'signup') {
+        await signupUser({ name, email, password });
+        setAuthMessage('Account created. You can now log in.');
+        setAuthMode('login');
+        setPassword('');
+        return;
+      }
+
+      const loginResponse = await loginUser({ email, password });
+      setAccessToken(loginResponse.access_token);
+      setPassword('');
+      setScreen('input');
+    } catch (error) {
+      setAuthMessage(error instanceof Error ? error.message : 'Authentication failed');
+    }
   };
 
   const handleAnalyze = async (e: FormEvent) => {
@@ -46,12 +69,13 @@ function App() {
     if (!isInputValid) return;
 
     try {
-      const response = await submitIdea({ idea });
+      const response = await submitIdea({ idea }, accessToken);
+      const analysis = response?.result ?? response;
 
-      const marketAnalysis = response?.market_analysis ?? {};
-      const revenueAnalysis = response?.revenue_analysis ?? {};
-      const swotAnalysis = response?.swot_analysis ?? {};
-      const startupScore = response?.startup_score ?? {};
+      const marketAnalysis = analysis?.market_analysis ?? {};
+      const revenueAnalysis = analysis?.revenue_analysis ?? {};
+      const swotAnalysis = analysis?.swot_analysis ?? {};
+      const startupScore = analysis?.startup_score ?? {};
 
       const nextResult: AnalysisResult = {
         marketScore: Number(startupScore.market_score ?? 0),
@@ -79,7 +103,9 @@ function App() {
       console.error('Analysis failed:', error);
       setResult({
         ...defaultResult,
-        recommendation: `"${idea}" could not be analyzed right now. Please check the backend and try again.`,
+        recommendation: error instanceof Error
+          ? `${error.message} — "${idea}" could not be analyzed.`
+          : `"${idea}" could not be analyzed right now. Please check the backend and try again.`,
       });
       setScreen('output');
     }
@@ -98,22 +124,39 @@ function App() {
         <main className="screen active">
           <section className="card auth-card">
             <div className="card-header">
-              <p className="eyebrow">Welcome back</p>
-              <h1>Login</h1>
+              <p className="eyebrow">Welcome</p>
+              <h1>{authMode === 'signup' ? 'Create account' : 'Login'}</h1>
             </div>
 
-            <form className="form" onSubmit={handleLogin}>
+            <form className="form" onSubmit={handleAuth}>
+              {authMode === 'signup' && (
+                <label>
+                  <span>Name</span>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Demo Founder" required />
+                </label>
+              )}
+
               <label>
                 <span>Email</span>
-                <input type="email" placeholder="you@example.com" required />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
               </label>
 
               <label>
                 <span>Password</span>
-                <input type="password" placeholder="••••••••" required />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
               </label>
 
-              <button type="submit" className="primary-btn">Login</button>
+              {authMessage && <p className="auth-message">{authMessage}</p>}
+
+              <button type="submit" className="primary-btn">
+                {authMode === 'signup' ? 'Create account' : 'Login'}
+              </button>
+              <button type="button" className="secondary-btn" onClick={() => {
+                setAuthMode(authMode === 'signup' ? 'login' : 'signup');
+                setAuthMessage('');
+              }}>
+                {authMode === 'signup' ? 'Already have an account? Login' : 'New user? Create account'}
+              </button>
             </form>
           </section>
         </main>

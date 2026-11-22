@@ -57,3 +57,7 @@ env/
 
 # Node
 node_modules/
+
+
+# Local Readme
+Readme_local.md
